@@ -10,3 +10,11 @@ export const httpCode = {
   forbidden: 'forbidden',
   validateError: 'validate_error',
 }
+
+// 类型字符串中文映射
+export const typeMap = {
+  str: '字符串',
+  int: '整型',
+  float: '浮点型',
+  bool: '布尔型',
+}
