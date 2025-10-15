@@ -11,7 +11,8 @@ import {
 import moment from 'moment'
 import { typeMap } from '@/config'
 import { useRoute } from 'vue-router'
-import { Message, Modal } from '@arco-design/web-vue'
+import { Form, Message, Modal, ValidatedError } from '@arco-design/web-vue'
+import type { CreateApiToolProviderRequest } from '@/models/api-tool.ts'
 
 const providers = reactive<Array<any>>([])
 const paginator = reactive<any>({
@@ -30,9 +31,9 @@ const form = reactive<any>({
   icon: 'https://picsum.photos/400',
   name: 'TEST',
   openapi_schema: '',
-  headers: [],
+  headers: [] as { key: string; value: string }[],
 })
-const formRef = ref<any>(null)
+const formRef = ref<InstanceType<typeof Form>>(null)
 
 const props = defineProps({
   createType: {
@@ -130,7 +131,13 @@ const handleUpdate = async () => {
 }
 
 // 提交表单模态窗处理器
-const handleSubmit = async ({ values, errors }) => {
+const handleSubmit = async ({
+  values,
+  errors,
+}: {
+  values: Record<string, any>
+  errors: Record<string, ValidatedError> | undefined
+}) => {
   if (errors) {
     return
   }
@@ -141,11 +148,14 @@ const handleSubmit = async ({ values, errors }) => {
     // 根据暴怒同的类型发起不同的请求
     if (props.createType === 'tool') {
       // 创建请求
-      const response = await createApiToolProvider(values)
+      const response = await createApiToolProvider(values as CreateApiToolProviderRequest)
       Message.success(response.message)
     } else if (showUpdateModal.value === true) {
       // 更新请求
-      const response = await updateApiToolProvider(providers[showIdx.value]['id'], values)
+      const response = await updateApiToolProvider(
+        providers[showIdx.value]['id'],
+        values as CreateApiToolProviderRequest,
+      )
       Message.success(response.message)
     }
 
@@ -273,7 +283,7 @@ const tools = computed(() => {
       </a-col>
     </a-row>
     <!--      loading-->
-    <a-row v-if="providers.length > 0">
+    <a-row v-if="paginator.total_page >= 2">
       <!--        加载数据中-->
       <a-col v-if="paginator.current_page <= paginator.total_page" :span="24" align="center">
         <a-space class="my-4">
@@ -519,8 +529,8 @@ const tools = computed(() => {
                 v-if="showUpdateModal"
                 class="rounded-lg !text-gray-700"
                 @click="handleDelete"
-                >删除</a-button
-              >
+                >删除
+              </a-button>
             </div>
             <a-space :size="16">
               <a-button class="rounded-lg" @click="handleCancel">取消</a-button>
